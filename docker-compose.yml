@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  api:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8080
+    container_name: manga_crawler_api
+    volumes:
+      - .:/code
+    ports:
+      - 8080:8080
+    env_file:
+      - ./.env.dev
+  splash:
+    image: scrapinghub/splash
+    container_name: splash
+    ports:
+      - "8050:8050"
+  # selenium:
+  #   image: selenium/standalone-firefox:beta
+  #   ports: 
+  #     - 4444:4444

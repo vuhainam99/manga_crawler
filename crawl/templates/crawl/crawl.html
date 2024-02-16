@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Zip File with Loading</title>
+    <style>
+        /* CSS cho vòng tròn loading */
+        #loading {
+            display: none;
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            margin-left: -25px;
+            margin-top: -25px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>Enter a link and click Submit</h1>
+    <h1>Wait until "Download Zip" appears</h1>
+    <input type="text" id="inputData" placeholder="Enter link...">
+    <button id="submitButton">Submit</button>
+    <div id="result"></div>
+    <div id="loading"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            var loading = $('#loading'); // Chọn vòng tròn loading
+            var downloadLink = null; // Đối tượng thẻ <a>
+
+            // Xử lý sự kiện khi nút Submit được nhấn
+            $("#submitButton").click(function() {
+                // Ẩn vòng tròn loading khi gửi yêu cầu API
+                loading.show();
+
+                // Lấy giá trị từ ô input
+                var inputData = $("#inputData").val();
+
+                // Kiểm tra xem ô input có dữ liệu không
+                if (inputData !== "") {
+                    // Gọi API bằng jQuery AJAX
+                    var form = new FormData();
+                    var host = '{{ host }}'
+                    console.log(host)
+                    form.append("link", inputData);
+
+                    var settings = {
+                        "url": `/api/crawl/`,
+                        "method": "POST",
+                        "timeout": 0,
+                        "processData": false,
+                        "mimeType": "multipart/form-data",
+                        "contentType": false,
+                        "data": form
+                    };
+
+                    $.ajax(settings).done(function (response) {
+                        var data = JSON.parse(response);
+
+                        if (data.hasOwnProperty('output_path')) {
+                            // Xóa thẻ <a> nếu nó tồn tại
+                            if (downloadLink) {
+                                downloadLink.remove();
+                            }
+
+                            downloadLink = document.createElement('a');
+                            downloadLink.href = `/media/${data.output_path}.zip`;
+                            downloadLink.innerHTML = `Download Zip For ${inputData}`;
+
+                            // Thêm thẻ <a> vào DOM để người dùng có thể tải tệp xuống
+                            document.body.appendChild(downloadLink);
+                        } else {
+                            console.error('Trường "output_path" không tồn tại trong phản hồi JSON.');
+                        }
+
+                        // Ẩn vòng tròn loading khi API đã được gọi xong
+                        loading.hide();
+                    });
+                } else {
+                    $("#result").html("Please enter a link.");
+                    loading.hide(); // Ẩn vòng tròn loading nếu không có dữ liệu
+                }
+            });
+        });
+    </script>
+</body>
+</html>
